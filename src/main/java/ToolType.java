@@ -1,3 +1,6 @@
+/**
+ * Represents all the different types of tools offered in the rental system.
+ */
 public enum ToolType
 {
     CHAINSAW("Chainsaw"),

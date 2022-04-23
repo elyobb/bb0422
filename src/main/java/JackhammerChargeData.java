@@ -1,3 +1,6 @@
+/**
+ * Daily charge information specific to renting a jackhammer.
+ */
 public class JackhammerChargeData extends ToolChargeData {
 
     @Override

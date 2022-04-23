@@ -1,3 +1,6 @@
+/**
+ * Daily charge information specific to renting a ladder.
+ */
 public class LadderChargeData extends ToolChargeData {
 
     @Override

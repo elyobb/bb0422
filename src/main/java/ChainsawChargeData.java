@@ -1,3 +1,6 @@
+/**
+ * Daily charge information specific to renting a chainsaw.
+ */
 public class ChainsawChargeData extends ToolChargeData {
 
     @Override
