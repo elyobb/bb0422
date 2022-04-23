@@ -1,41 +1,35 @@
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the business logic handled by {@link ToolRentalController}.
+ * Tests that {@link Checkout#createRentalAgreement(String, int, int, LocalDate)} creates the expected {@link ToolRentalAgreement},
+ * and that the expected output is produced when printing the agreement to the console.
  */
-public class ToolRentalControllerTest {
-
-    private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd-yy");
+public class ToolRentalAgreementTest {
 
     /**
-     * Tests that the expected exception is thrown when the provided discount exceeds 100%.
+     * Tests that the expected exception is thrown when the discount exceeds 100%.
      */
     @Test
-    public void testExcessiveDiscount()
-    {
+    public void testExcessiveDiscount() {
         IllegalArgumentException thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            Date checkoutDate = simpleDateFormat.parse("09-03-15");
-            RentalAgreement.checkout("JAKR", 5, 101, checkoutDate);
-        } );
+            LocalDate checkoutDate = LocalDate.of(9, 3, 15);
+            Checkout.createRentalAgreement("JAKR", 5, 101, checkoutDate);
+        });
         assertEquals("Discount percent must be between 0 and 100.", thrown.getMessage());
     }
 
     /**
-     * Tests that the expected exception is thrown when the provided discount is less than 0%.
+     * Tests that the expected exception is thrown when the discount is less than 0%.
      */
     @Test
-    public void testNegativeDiscount()
-    {
+    public void testNegativeDiscount() {
         IllegalArgumentException thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            Date checkoutDate = simpleDateFormat.parse("09-03-15");
-            RentalAgreement.checkout("JAKR", 5, -1, checkoutDate);
+            LocalDate checkoutDate = LocalDate.of(9, 3, 15);
+            Checkout.createRentalAgreement("JAKR", 5, -1, checkoutDate);
         });
         assertEquals("Discount percent must be between 0 and 100.", thrown.getMessage());
     }
@@ -44,36 +38,32 @@ public class ToolRentalControllerTest {
      * Tests that the expected exception is thrown when the number of rental days is not a positive number.
      */
     @Test
-    public void testZeroRentalDays()
-    {
+    public void testZeroRentalDays() {
         IllegalArgumentException thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            Date checkoutDate = simpleDateFormat.parse("09-03-15");
-            RentalAgreement.checkout("JAKR", 0, 10, checkoutDate);
-        }, "Rental day count must be at least 1." );
+            LocalDate checkoutDate = LocalDate.of(9, 3, 15);
+            Checkout.createRentalAgreement("JAKR", 0, 10, checkoutDate);
+        }, "Rental day count must be at least 1.");
         assertEquals("Rental day count must be at least 1.", thrown.getMessage());
     }
 
     /**
-     * Tests that the expected exception is thrown when the provided tool code does not represent a known tool in the system.
+     * Tests that the expected exception is thrown when the tool code is not in the system.
      */
     @Test
-    public void testInvalidToolCode()
-    {
+    public void testInvalidToolCode() {
         IllegalArgumentException thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            Date checkoutDate = simpleDateFormat.parse("09-03-15");
-            RentalAgreement.checkout("XXXX", 5, 10, checkoutDate);
+            LocalDate checkoutDate = LocalDate.of(9, 3, 15);
+            Checkout.createRentalAgreement("XXXXXXXXXX", 5, 10, checkoutDate);
         });
-        assertEquals("Tool code does not correspond to a known tool type.", thrown.getMessage());
+        assertEquals("Tool code does not correspond to an existing tool.", thrown.getMessage());
     }
 
     /**
      * Tests that the expected output is generated when a ladder is rented with a 10% discount over a time period
      * containing a holiday. There is no charge for holidays when renting a ladder.
-     *
-     * @throws ParseException if the checkout date fails to be parsed by SimpleDateFormat
      */
     @Test
-    public void testJulyFourthLadder() throws ParseException {
+    public void testJulyFourthLadder() {
 
         String expectedOutput = """
                 Tool code: LADW
@@ -89,20 +79,19 @@ public class ToolRentalControllerTest {
                 Discount amount: $0.20
                 Final charge: $1.79""";
 
-        String actualOutput = RentalAgreement.checkout("LADW", 2, 10, simpleDateFormat.parse("07-02-20"));
+        ToolRentalAgreement rentalAgreement = Checkout.createRentalAgreement("LADW", 2,
+                10, LocalDate.of(20, 7, 2));
 
-        assertEquals(expectedOutput, actualOutput);
+        assertEquals(expectedOutput, rentalAgreement.getOutput());
     }
 
     /**
      * Tests that the expected output is generated when a chainsaw is rented with a 25% discount over a time period
      * containing a full weekend and also a holiday. There is no charge for weekends when renting a chainsaw, but there is
      * for the holiday.
-     *
-     * @throws ParseException if the checkout date fails to be parsed by SimpleDateFormat
      */
     @Test
-    public void testWeekendAndJulyFourthChainsaw() throws ParseException {
+    public void testWeekendAndJulyFourthChainsaw() {
 
         String expectedOutput = """
                 Tool code: CHNS
@@ -118,19 +107,18 @@ public class ToolRentalControllerTest {
                 Discount amount: $1.12
                 Final charge: $3.35""";
 
-        String actualOutput = RentalAgreement.checkout("CHNS", 5, 25, simpleDateFormat.parse("07-02-15"));
+        ToolRentalAgreement rentalAgreement = Checkout.createRentalAgreement("CHNS", 5,
+                25, LocalDate.of(15, 7, 2));
 
-        assertEquals(expectedOutput, actualOutput);
+        assertEquals(expectedOutput, rentalAgreement.getOutput());
     }
 
     /**
-     * Tests that the expected output is generated when a jackhammer is rented (no discount) over a time period
-     * containing both a full weekend and a holiday. There is no charge for holidays or weekends when renting a jackhammer.
-     *
-     * @throws ParseException if the checkout date fails to be parsed by SimpleDateFormat
+     * Tests that the expected output is generated when a jackhammer is rented over a time period containing both a
+     * full weekend and a holiday. There is no charge for holidays or weekends when renting a jackhammer.
      */
     @Test
-    public void testWeekendAndLaborDayJackhammer() throws ParseException {
+    public void testWeekendAndLaborDayJackhammer() {
 
         String expectedOutput = """
                 Tool code: JAKD
@@ -146,20 +134,20 @@ public class ToolRentalControllerTest {
                 Discount amount: $0.00
                 Final charge: $8.97""";
 
-        String actualOutput = RentalAgreement.checkout("JAKD", 6, 0, simpleDateFormat.parse("09-03-15"));
+        ToolRentalAgreement rentalAgreement = Checkout.createRentalAgreement("JAKD", 6,
+                0, LocalDate.of(15, 9, 3));
 
-        assertEquals(expectedOutput, actualOutput);
+        assertEquals(expectedOutput, rentalAgreement.getOutput());
     }
 
     /**
-     * Tests that the expected output is generated when a jackhammer is rented (no discount) over a time period
-     * containing a holiday which falls on a weekend. There is no charge for holidays or weekends when renting a jackhammer,
-     * and the weekend holiday should count as a single day of not being charged.
-     *
-     * @throws ParseException if the checkout date fails to be parsed by SimpleDateFormat
+     * Tests that the expected output is generated when a jackhammer is rented over a time period containing a holiday
+     * which falls on a weekend. There is no charge for holidays or weekends when renting a jackhammer, and since the
+     * holiday falls on Saturday, it is celebrated on the closest weekday (Friday). This means Friday through Sunday
+     * are non-charge days.
      */
     @Test
-    public void testWeekendJulyFourthJackhammer() throws ParseException {
+    public void testWeekendJulyFourthJackhammer() {
 
         String expectedOutput = """
                 Tool code: JAKR
@@ -169,26 +157,26 @@ public class ToolRentalControllerTest {
                 Checkout date: 07-02-15
                 Due date: 07-11-15
                 Daily rental charge: $2.99
-                Charge days: 6
-                Pre-discount charge: $17.94
+                Charge days: 5
+                Pre-discount charge: $14.96
                 Discount percent: 0%
                 Discount amount: $0.00
-                Final charge: $17.94""";
+                Final charge: $14.96""";
 
-        String actualOutput = RentalAgreement.checkout("JAKR", 9, 0, simpleDateFormat.parse("07-02-15"));
+        ToolRentalAgreement rentalAgreement = Checkout.createRentalAgreement("JAKR", 9,
+                0, LocalDate.of(15, 7, 2));
 
-        assertEquals(expectedOutput, actualOutput);
+        assertEquals(expectedOutput, rentalAgreement.getOutput());
     }
 
     /**
      * Tests that the expected output is generated when a jackhammer is rented with a 50% discount over a time period
      * containing a holiday which falls on a weekend. There is no charge for holidays or weekends when renting a jackhammer,
-     * and the weekend holiday should count as a single day of not being charged.
-     *
-     * @throws ParseException if the checkout date fails to be parsed by SimpleDateFormat
+     * and since the holiday falls on Saturday, it is celebrated on the closest weekday (Friday). This means Friday
+     * through Sunday are non-charge days.
      */
     @Test
-    public void testWeekendJulyFourthJackhammerHalfOff() throws ParseException {
+    public void testWeekendJulyFourthJackhammerHalfOff() {
 
         String expectedOutput = """
                 Tool code: JAKR
@@ -198,14 +186,15 @@ public class ToolRentalControllerTest {
                 Checkout date: 07-02-20
                 Due date: 07-06-20
                 Daily rental charge: $2.99
-                Charge days: 2
-                Pre-discount charge: $5.98
+                Charge days: 1
+                Pre-discount charge: $2.99
                 Discount percent: 50%
-                Discount amount: $2.99
-                Final charge: $2.99""";
+                Discount amount: $1.50
+                Final charge: $1.49""";
 
-        String actualOutput = RentalAgreement.checkout("JAKR", 4, 50, simpleDateFormat.parse("07-02-20"));
+        ToolRentalAgreement rentalAgreement = Checkout.createRentalAgreement("JAKR", 4,
+                50, LocalDate.of(20, 7, 2));
 
-        assertEquals(expectedOutput, actualOutput);
+        assertEquals(expectedOutput, rentalAgreement.getOutput());
     }
 }

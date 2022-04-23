@@ -2,7 +2,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Storage for all tools offered in the rental system.
+ * Mock database containing all tools currently offered in the rental system. The 4-letter code acts as a primary key
+ * for looking up tool details when checking out.
  */
 public class Tools {
 

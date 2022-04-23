@@ -1,12 +1,12 @@
-import java.util.Date;
+import java.time.LocalDate;
 
 /**
- * Calls {@link RentalAgreement#checkout(String, int, int, Date)} and writes the output to the console.
+ * Creates a sample {@link ToolRentalAgreement} and calls {@link ToolRentalAgreement#print()} to print to console.
  */
 public class Main {
     public static void main(String[] args)
     {
         // the rental date will be "now"
-        System.out.println(RentalAgreement.checkout("CHNS", 4, 0, new Date()));
+        Checkout.createRentalAgreement("CHNS", 4, 0, LocalDate.now()).print();
     }
 }

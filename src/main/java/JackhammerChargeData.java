@@ -9,12 +9,12 @@ public class JackhammerChargeData extends ToolChargeData {
     }
 
     @Override
-    public boolean hasWeekendCharge() {
+    public boolean hasHolidayCharge() {
         return false;
     }
 
     @Override
-    public boolean hasHolidayCharge() {
+    public boolean hasWeekendCharge() {
         return false;
     }
 }

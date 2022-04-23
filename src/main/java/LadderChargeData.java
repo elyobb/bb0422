@@ -9,12 +9,13 @@ public class LadderChargeData extends ToolChargeData {
     }
 
     @Override
+    public boolean hasHolidayCharge() {
+        return false;
+    }
+
+    @Override
     public boolean hasWeekendCharge() {
         return true;
     }
 
-    @Override
-    public boolean hasHolidayCharge() {
-        return false;
-    }
 }

@@ -9,12 +9,12 @@ public class ChainsawChargeData extends ToolChargeData {
     }
 
     @Override
-    public boolean hasWeekendCharge() {
-        return false;
+    public boolean hasHolidayCharge() {
+        return true;
     }
 
     @Override
-    public boolean hasHolidayCharge() {
-        return true;
+    public boolean hasWeekendCharge() {
+        return false;
     }
 }

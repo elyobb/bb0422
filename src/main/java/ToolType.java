@@ -1,5 +1,5 @@
 /**
- * Represents all the different types of tools offered in the rental system.
+ * Represents all the different types of tools currently offered in the rental system.
  */
 public enum ToolType
 {

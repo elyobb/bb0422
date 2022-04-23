@@ -1,20 +1,17 @@
 import java.time.DayOfWeek;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
+
+import static java.time.temporal.TemporalAdjusters.firstInMonth;
 
 /**
- * Handles the business logic of creating a rental agreement. For a given rental period, calculates how many days qualify
+ * Handles most of the business logic of creating a rental agreement. For a given rental period, calculates how many days qualify
  * for a rental charge. Depending on the type of tool being rented, holidays and/or weekends may be exempt from a rental charge.
  */
 public class ToolRentalController {
 
-    public static Date calculateDueDate(Date startDate, int numberOfDays)
+    public static LocalDate calculateDueDate(LocalDate startDate, int numberOfDays)
     {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(startDate);
-        calendar.add(Calendar.DAY_OF_MONTH, numberOfDays);
-        return calendar.getTime();
+        return LocalDate.of(startDate.getYear(), startDate.getMonth(), startDate.getDayOfMonth()).plusDays(numberOfDays);
     }
 
     /**
@@ -27,13 +24,13 @@ public class ToolRentalController {
      * @param numberOfDays the number of days in the rental period
      * @return the number of days in the rental period for which the customer will be charged
      */
-    public static int calculateChargeDays(ToolChargeData toolChargeData, Date rentalDate, Date dueDate, int numberOfDays)
+    public static int calculateChargeDays(ToolChargeData toolChargeData, LocalDate rentalDate, LocalDate dueDate, int numberOfDays)
     {
         int daysToSubtract = 0;
         // deduct any holidays from the rental period if needed
         if(!toolChargeData.hasHolidayCharge())
         {
-            daysToSubtract += determineNumberOfHolidays(rentalDate, dueDate, toolChargeData.hasWeekendCharge());
+            daysToSubtract += determineNumberOfHolidays(rentalDate, dueDate);
         }
         // deduct any weekend days from the rental period if needed
         if(!toolChargeData.hasWeekendCharge())
@@ -50,48 +47,38 @@ public class ToolRentalController {
      *
      * @param rentalDate the date of the start of the tool rental
      * @param dueDate the date when the tool is due for return
-     * @param hasWeekendCharge used when a holiday happens to fall upon a weekend --
-     *                         in this case we will ignore the holiday and instead the day will be deducted as
-     *                         a weekend day in {@link #determineNumberOfWeekendDays(Date, Date)}. This is because
-     *                         even if a holiday falls on a weekend, it is still just a single day exempt from rental charge
      *
      * @return the number of holidays identified within the rental period, between 0 and 2.
      */
-    private static int determineNumberOfHolidays(Date rentalDate, Date dueDate, boolean hasWeekendCharge)
+    private static int determineNumberOfHolidays(LocalDate rentalDate, LocalDate dueDate)
     {
         int numberOfHolidays = 0;
-        Calendar rentalDateCalendar = Calendar.getInstance();
-        rentalDateCalendar.setTime(rentalDate);
-        int currentYear = rentalDateCalendar.get(Calendar.YEAR);
+        int currentYear = rentalDate.getYear();
 
-        Calendar julyFourthCalendar = new GregorianCalendar(currentYear, Calendar.JULY, 4);
-        Date julyFourth = julyFourthCalendar.getTime();
-        DayOfWeek julyFourthDayOfWeek = DayOfWeek.of(julyFourthCalendar.get(Calendar.DAY_OF_WEEK));
-        boolean julyFourthOnWeekend = julyFourthDayOfWeek == DayOfWeek.SATURDAY || julyFourthDayOfWeek == DayOfWeek.SUNDAY;
+        LocalDate julyFourth = LocalDate.of(currentYear, 7, 4);
+        DayOfWeek julyFourthDayOfWeek = julyFourth.getDayOfWeek();
 
-        if(hasWeekendCharge || !julyFourthOnWeekend)
+        if(julyFourthDayOfWeek == DayOfWeek.SATURDAY)
         {
-            if(rentalDate.before(julyFourth) && dueDate.compareTo(julyFourth) >= 0)
-            {
-                numberOfHolidays++;
-            }
+            julyFourth = julyFourth.plusDays(-1);
+        }
+        else if (julyFourthDayOfWeek == DayOfWeek.SUNDAY)
+        {
+            julyFourth = julyFourth.plusDays(1);
         }
 
-        Calendar laborDayCalendar = new GregorianCalendar();
-        laborDayCalendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        laborDayCalendar.set(Calendar.DAY_OF_WEEK_IN_MONTH, 1);
-        laborDayCalendar.set(Calendar.MONTH, Calendar.SEPTEMBER);
-        laborDayCalendar.set(Calendar.YEAR, currentYear);
-        Date laborDay = laborDayCalendar.getTime();
-        DayOfWeek laborDayDayOfWeek = DayOfWeek.of(laborDayCalendar.get(Calendar.DAY_OF_WEEK));
-        boolean laborDayOnWeekend = laborDayDayOfWeek == DayOfWeek.SATURDAY || laborDayDayOfWeek == DayOfWeek.SUNDAY;
-
-        if(hasWeekendCharge || !laborDayOnWeekend)
+        // we count the holiday even if it happens to be on a weekend - it gets moved to the nearest weekday,
+        // so we always count the holiday as well as the weekend days later on
+        if(rentalDate.isBefore(julyFourth) && (dueDate.isAfter(julyFourth) || dueDate.isEqual(julyFourth)))
         {
-            if(rentalDate.before(laborDay) && dueDate.compareTo(laborDay) >= 0)
-            {
-                numberOfHolidays++;
-            }
+            numberOfHolidays++;
+        }
+
+        LocalDate laborDay = LocalDate.of(currentYear, 9, 1).with(firstInMonth(DayOfWeek.MONDAY));
+
+        if(rentalDate.isBefore(laborDay) && (dueDate.isAfter(laborDay) || dueDate.isEqual(laborDay)))
+        {
+            numberOfHolidays++;
         }
 
         return numberOfHolidays;
@@ -105,22 +92,16 @@ public class ToolRentalController {
      *
      * @return the number of days which fall upon a weekend
      */
-    private static int determineNumberOfWeekendDays(Date rentalDate, Date dueDate)
+    private static int determineNumberOfWeekendDays(LocalDate rentalDate, LocalDate dueDate)
     {
-        Calendar rentalDateCalendar = Calendar.getInstance();
-        rentalDateCalendar.setTime(rentalDate);
-
-        Calendar dueDateCalendar = Calendar.getInstance();
-        dueDateCalendar.setTime(dueDate);
         int numWeekendDays = 0;
-        while(rentalDateCalendar.get(Calendar.DATE) <= dueDateCalendar.get(Calendar.DATE))
+        for(LocalDate startDate = rentalDate; startDate.compareTo(dueDate) <= 0; startDate = startDate.plusDays(1))
         {
-            int dayOfWeekIndex = rentalDateCalendar.get(Calendar.DAY_OF_WEEK);
-            if(dayOfWeekIndex == 1 || dayOfWeekIndex == 7)
+            DayOfWeek dayOfWeek = startDate.getDayOfWeek();
+            if(dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY)
             {
                 numWeekendDays++;
             }
-            rentalDateCalendar.add(Calendar.DAY_OF_MONTH, 1);
         }
         return numWeekendDays;
     }

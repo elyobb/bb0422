@@ -1,40 +1,39 @@
 /**
  * Represents a tool in the rental system. Each tool has a type and brand. A tool also has an associated daily rental charge,
- * which will fluctuate depending on the tool's type. Certain tool types may also be exempt from daily charges on special
- * days such as holidays or weekends.
+ * which will depend on the tool's type. Certain tool types may also be exempt from daily charges on holidays and/or weekends.
  */
 public class Tool {
 
-    private final ToolType toolType;
-    private final String toolBrand;
-    private ToolChargeData toolChargeData;
+    private final ToolType type;
+    private final String brand;
+    private ToolChargeData chargeData;
 
-    public Tool(ToolType toolType, String toolBrand)
+    public Tool(ToolType type, String brand)
     {
-        this.toolType = toolType;
-        this.toolBrand = toolBrand;
-        setToolChargeData();
+        this.type = type;
+        this.brand = brand;
+        setChargeData();
     }
 
-    public String getToolType() {
-        return toolType.getValue();
+    public ToolType getType() {
+        return type;
     }
 
-    public String getToolBrand() {
-        return toolBrand;
+    public String getBrand() {
+        return brand;
     }
 
-    private void setToolChargeData()
+    private void setChargeData()
     {
-        switch (toolType) {
-            case CHAINSAW -> this.toolChargeData = new ChainsawChargeData();
-            case LADDER -> this.toolChargeData = new LadderChargeData();
-            case JACKHAMMER -> this.toolChargeData = new JackhammerChargeData();
+        switch (type) {
+            case CHAINSAW -> this.chargeData = new ChainsawChargeData();
+            case LADDER -> this.chargeData = new LadderChargeData();
+            case JACKHAMMER -> this.chargeData = new JackhammerChargeData();
         }
     }
 
     public ToolChargeData getChargeData()
     {
-        return toolChargeData;
+        return chargeData;
     }
 }
