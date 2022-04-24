@@ -22,7 +22,7 @@ public class Checkout {
     /**
      * Constructs the rental agreement for a tool rental.
      *
-     * @param toolCode the type of tool being rented. Must correspond to a tool code stored by {@link Tools}.
+     * @param toolCode the type of tool being rented. Must correspond to a tool code stored by {@link ToolRepository}.
      * @param numberOfDays the number of days in the rental period
      * @param discountPercent the discount percentage to apply to the final rental charge
      * @param checkoutDate the start of the rental period
@@ -41,7 +41,7 @@ public class Checkout {
             throw new IllegalArgumentException("Discount percent must be between 0 and 100.");
         }
 
-        final Tool tool = Optional.ofNullable(Tools.getTool(toolCode))
+        final Tool tool = Optional.ofNullable(ToolRepository.getTool(toolCode))
                     .orElseThrow(() -> new IllegalArgumentException("Tool code does not correspond to an existing tool."));
         final ToolChargeData toolChargeData = tool.getChargeData();
 

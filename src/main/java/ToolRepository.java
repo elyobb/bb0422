@@ -2,10 +2,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Mock database containing all tools currently offered in the rental system. The 4-letter code acts as a primary key
- * for looking up tool details when checking out.
+ * A collection of all tools offered in the rental system. The 4-letter code acts as a primary key for looking up tool
+ * details when attempting to check the tool out for rent.
  */
-public class Tools {
+public class ToolRepository {
 
     private static final Map<String, Tool> tools;
 
